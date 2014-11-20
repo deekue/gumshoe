@@ -1,8 +1,8 @@
-package gumshoe
+package config
 
 import (
 	"encoding/json"
-  "errors"
+	"errors"
 	"io/ioutil"
 	"log"
 )
@@ -63,7 +63,7 @@ func (tc *TrackerConfig) LoadGumshoeConfig(cfgFile string) error {
 	if err := tc.ProcessGumshoeJSON(cfgFile); err != nil {
 		log.Println("Error with config file ", cfgFile, ": ", err)
 		log.Println("Using basic template.")
-		return tc.ProcessGumshoeJSON("cfg/gumshoe_config.json")
+		return tc.ProcessGumshoeJSON("gumshoe_config.json")
 	}
 	return nil
 }
@@ -82,10 +82,10 @@ func (tc *TrackerConfig) ProcessGumshoeJSON(cfgJson string) error {
 
 func (tc *TrackerConfig) WriteGumshoeConfig(update []byte) error {
 	err := json.Unmarshal(update, &tc)
-  if err == nil {
+	if err == nil {
 		var gCfg []byte
 		gCfg, err := json.MarshalIndent(&tc, "", "  ")
-    if err == nil {
+		if err == nil {
 			return ioutil.WriteFile(tc.Files["base_dir"]+"gumshoe_config.json",
 				gCfg, 0655)
 		}
@@ -137,9 +137,9 @@ func (S *Shows) GetShow(title string) (int, *Show, error) {
 //	return nil
 //}
 
-func (S *Shows) LoadShows() (int, error) {
+func (S *Shows) LoadShows(tc TrackerConfig) (int, error) {
 	sCfg, err := ioutil.ReadFile(tc.Files["shows"])
-  if err != nil {
+	if err != nil {
 		log.Println("No show file found. Will just use a blank one.")
 	}
 	if err := json.Unmarshal(sCfg, &S); err != nil {
@@ -149,9 +149,9 @@ func (S *Shows) LoadShows() (int, error) {
 	return len(S.TVShows), nil
 }
 
-func (S *Shows) WriteShows() (int, error) {
+func (S *Shows) WriteShows(tc TrackerConfig) (int, error) {
 	sCfg, err := json.MarshalIndent(&S, "", "  ")
-  if err == nil {
+	if err == nil {
 		// TODO(ryan): log success writing things (woo!)
 		if err := ioutil.WriteFile(tc.Files["shows"], sCfg, 0666); err == nil {
 			// TODO(ryan): log more stuff here too.

@@ -1,21 +1,23 @@
-package gumshoe
+package main
 
 import (
 	"flag"
 	"log"
-	"net/http"
 	"os"
-  "path"
 	"path/filepath"
 	"runtime/debug"
-	"time"
+
+	"github.com/deekue/gumshoe/config"
+	"github.com/deekue/gumshoe/irc"
+	"github.com/deekue/gumshoe/watcher"
+	"github.com/deekue/gumshoe/webui"
 )
 
 // HTTP Server Flags
 var port = flag.String("p", "http",
 	"Which port do we serve requests from. 0 allows the system to decide.")
 var base_dir = flag.String("base_dir",
-	"/home/ryan/Development/bitme-get/src/gumshoe/http",
+	filepath.Join(os.Getenv("HOME"), ".local", "gumshoe"),
 	"Base path for the HTTP server's files.")
 
 // Base Config Stuff
@@ -25,33 +27,27 @@ var config_file = flag.String("c",
 
 // Get this flag set working!
 var (
-	tc     = TrackerConfig{}
-	home   = os.Getenv("HOME")
-	user   = os.Getenv("USER")
-	gopath = os.Getenv("GOPATH")
-  gumshoeSrc = os.Getenv("GUMSHOESRC")
-	gcstat = debug.GCStats{}
+	tc         = config.TrackerConfig{}
+	home       = os.Getenv("HOME")
+	user       = os.Getenv("USER")
+	gopath     = os.Getenv("GOPATH")
+	gumshoeSrc = os.Getenv("GUMSHOESRC")
+	gcstat     = debug.GCStats{}
 )
-
-func GumshoeHandlers() http.Handler {
-	gumshoe_handlers := http.NewServeMux()
-	gumshoe_handlers.Handle("/", http.FileServer(http.Dir(path.Join(gumshoeSrc, "html"))))
-	return gumshoe_handlers
-}
 
 type GumshoeSignals struct {
 	config_modified chan bool
 	shutdown        chan bool
 	// logger          chan Logger
-	tcSignal        chan TrackerConfig
-	showSignal      chan *Shows
+	tcSignal   chan config.TrackerConfig
+	showSignal chan *config.Shows
 }
 
-func init() {
+func main() {
 	flag.Parse()
-  if gumshoeSrc == "" {
-    gumshoeSrc = "/home/ryan/gocode/src/gumshoe"
-  }
+	if gumshoeSrc == "" {
+		gumshoeSrc = "/home/ryan/gocode/src/gumshoe"
+	}
 	if err := tc.LoadGumshoeConfig(*config_file); err != nil {
 		log.Fatal(err)
 	}
@@ -61,29 +57,17 @@ func init() {
 		}
 	}
 	signals := new(GumshoeSignals)
-  signals.tcSignal <- tc
+	signals.tcSignal <- tc
 
-  allShows := NewShowsConfig()
-  if numShows, err := allShows.LoadShows(); err == nil {
-    log.Printf("You have %d shows that you are tracking.", numShows)
-  }
-  signals.showSignal <- allShows
-}
-
-func main() {
-  // go StartMetrics()
-	go StartHttpServer()
-	go StartIRC()
-}
-
-func StartHttpServer() {
-	s := &http.Server{
-		Addr:           "127.0.0.1:" + *port,
-		Handler:        GumshoeHandlers(),
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
-		MaxHeaderBytes: 1 << 20,
+	allShows := config.NewShowsConfig()
+	if numShows, err := allShows.LoadShows(tc); err == nil {
+		log.Printf("You have %d shows that you are tracking.", numShows)
 	}
-	log.Println("Starting up webserver...")
-	log.Fatal(s.ListenAndServe())
+	signals.showSignal <- allShows
+	log.Println("Starting up gumshoe...")
+
+	// go StartMetrics()
+	watcher.InitWatcher(tc, allShows)
+	go webui.StartHttpServer(gumshoeSrc, *port)
+	go irc.StartIRC(tc)
 }
