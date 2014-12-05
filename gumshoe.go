@@ -16,12 +16,12 @@ import (
 // HTTP Server Flags
 var port = flag.String("p", "http",
 	"Which port do we serve requests from. 0 allows the system to decide.")
-var base_dir = flag.String("base_dir",
+var baseDir = flag.String("baseDir",
 	filepath.Join(os.Getenv("HOME"), ".local", "gumshoe"),
-	"Base path for the HTTP server's files.")
+	"Base path for gumshoe.")
 
 // Base Config Stuff
-var config_file = flag.String("c",
+var configFile = flag.String("c",
 	filepath.Join(os.Getenv("HOME"), ".gumshoe", "config.json"),
 	"Location of the configuration file.")
 
@@ -35,9 +35,9 @@ var (
 	gcstat     = debug.GCStats{}
 )
 
-type GumshoeSignals struct {
-	config_modified chan bool
-	shutdown        chan bool
+type gumshoeSignals struct {
+	configModified chan bool
+	shutdown       chan bool
 	// logger          chan Logger
 	tcSignal   chan config.TrackerConfig
 	showSignal chan *config.Shows
@@ -45,10 +45,7 @@ type GumshoeSignals struct {
 
 func main() {
 	flag.Parse()
-	if gumshoeSrc == "" {
-		gumshoeSrc = "/home/ryan/gocode/src/gumshoe"
-	}
-	if err := tc.LoadGumshoeConfig(*config_file); err != nil {
+	if err := tc.LoadGumshoeConfig(*configFile); err != nil {
 		log.Fatal(err)
 	}
 	if tc.Operations.HttpPort != *port && tc.Operations.HttpPort != "" {
@@ -56,18 +53,21 @@ func main() {
 			log.Println(err)
 		}
 	}
-	signals := new(GumshoeSignals)
-	signals.tcSignal <- tc
+	//signals := new(gumshoeSignals)
+	//signals.tcSignal <- tc
 
 	allShows := config.NewShowsConfig()
 	if numShows, err := allShows.LoadShows(tc); err == nil {
 		log.Printf("You have %d shows that you are tracking.", numShows)
 	}
-	signals.showSignal <- allShows
+	//signals.showSignal <- allShows
 	log.Println("Starting up gumshoe...")
 
 	// go StartMetrics()
 	watcher.InitWatcher(tc, allShows)
-	go webui.StartHttpServer(gumshoeSrc, *port)
-	go irc.StartIRC(tc)
+	if tc.Operations.WatchMethod == "irc" {
+		go irc.StartIRC(tc)
+	}
+	webui.StartHTTPServer(*port)
+	log.Println("Exiting gumshoe...")
 }

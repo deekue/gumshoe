@@ -63,7 +63,7 @@ func (tc *TrackerConfig) LoadGumshoeConfig(cfgFile string) error {
 	if err := tc.ProcessGumshoeJSON(cfgFile); err != nil {
 		log.Println("Error with config file ", cfgFile, ": ", err)
 		log.Println("Using basic template.")
-		return tc.ProcessGumshoeJSON("gumshoe_config.json")
+		return tc.ProcessGumshoeJSON("config/gumshoe_config.json")
 	}
 	return nil
 }

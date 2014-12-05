@@ -1,4 +1,4 @@
-/* Gumshoe Watcher
+/* Package watcher
  * Program that takes episode listings in, parses them and compares the title, episode number and
  * quality against the watchlist.
  */
