@@ -1,4 +1,4 @@
-package config
+package gumshoe
 
 import (
 	"encoding/json"
@@ -95,7 +95,6 @@ func (tc *TrackerConfig) WriteGumshoeConfig(update []byte) error {
 }
 
 // TV shows that should be downloaded.
-var allShows *Shows
 
 type Show struct {
 	Title    string   `json:"title"`

@@ -1,4 +1,4 @@
-package irc
+package gumshoe
 
 import (
 	"fmt"
@@ -7,8 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/deekue/gumshoe/config"
-	"github.com/deekue/gumshoe/watcher"
 	"github.com/thoj/go-ircevent"
 )
 
@@ -30,7 +28,7 @@ func init() {
 
 // should this be refactored so that it can reconnect on config changes instead of diconnect and
 // connect. TODO(ryan)
-func connectToTrackerIRC(tc config.TrackerConfig, ircClient *irc.Connection) {
+func connectToTrackerIRC(tc TrackerConfig, ircClient *irc.Connection) {
 	// Give the connection the configured defaults
 	//ircClient.KeepAlive = time.Duration(tc.IRC.KeepAlive) * time.Minute
 	//ircClient.Timeout = time.Duration(tc.IRC.Timeout) * time.Minute
@@ -55,7 +53,7 @@ func matchAnnounce(e *irc.Event) {
 	if aMatch != nil {
 		eMatch := episodePattern.FindStringSubmatch(aMatch[1])
 		if eMatch != nil {
-			err := watcher.IsNewEpisode(eMatch)
+			err := IsNewEpisode(eMatch)
 			if err == nil {
 				log.Println("This is where we would pick up the new episode.")
 				// go RetrieveEpisode(aMatch[2])
@@ -66,7 +64,7 @@ func matchAnnounce(e *irc.Event) {
 	}
 }
 
-//func EnableIRC(tc config.TrackerConfig, irc_client *irc.Connection) {
+//func EnableIRC(tc TrackerConfig, irc_client *irc.Connection) {
 //	for {
 //		run := <-irc_enabled
 //		if run {
@@ -87,7 +85,7 @@ func matchAnnounce(e *irc.Event) {
 //}
 
 // StartIRC kick off the IRC client
-func StartIRC(tc config.TrackerConfig) {
+func StartIRC(tc TrackerConfig) {
 	ircClient := irc.IRC(tc.IRC.Nick, tc.IRC.Nick)
 	// go WatchIRCConfig(signals)
 	// go UpdateLog()

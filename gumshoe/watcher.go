@@ -2,7 +2,7 @@
  * Program that takes episode listings in, parses them and compares the title, episode number and
  * quality against the watchlist.
  */
-package watcher
+package gumshoe
 
 import (
 	"database/sql"
@@ -14,12 +14,11 @@ import (
 	"time"
 
 	"github.com/coopernurse/gorp"
-	"github.com/deekue/gumshoe/config"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 var db *EpisodeDB
-var allShows *config.Shows
+var allShows *Shows
 
 type Episode struct {
 	title   string
@@ -51,7 +50,7 @@ type EpisodeDB struct {
 	conn     *gorp.DbMap
 }
 
-func InitWatcher(tc config.TrackerConfig, shows *config.Shows) {
+func InitWatcher(tc TrackerConfig, shows *Shows) {
 	// Metrics
 
 	allShows = shows
@@ -123,7 +122,7 @@ func getInt(s string) int {
 	return r
 }
 
-func unseenEpisode(show *config.Show, t, s, e string) (*Episode, error) {
+func unseenEpisode(show *Show, t, s, e string) (*Episode, error) {
 	if show.Episodal {
 		eCheck := newEpisode(t, getInt(s), getInt(e))
 		err := db.conn.SelectOne(&eCheck,
@@ -134,7 +133,7 @@ func unseenEpisode(show *config.Show, t, s, e string) (*Episode, error) {
 	return nil, errors.New("Something went wrong with the regex match.")
 }
 
-func unseenDaily(show *config.Show, t, eDetails string) (*Episode, error) {
+func unseenDaily(show *Show, t, eDetails string) (*Episode, error) {
 	if !show.Episodal {
 		dRegexp, _ := regexp.Compile("^.*(\\d{4}\\.\\d{2}\\.\\d{2}).+$")
 		date := dRegexp.FindString(eDetails)
@@ -150,6 +149,6 @@ func unseenDaily(show *config.Show, t, eDetails string) (*Episode, error) {
 	return nil, errors.New("This episode was matched wrong." + t)
 }
 
-func verifyQuality(show *config.Show, s string) bool {
+func verifyQuality(show *Show, s string) bool {
 	return true
 }
