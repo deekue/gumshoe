@@ -7,16 +7,13 @@ import (
 	"path/filepath"
 	"runtime/debug"
 
-	"github.com/deekue/gumshoe/config"
-	"github.com/deekue/gumshoe/irc"
-	"github.com/deekue/gumshoe/watcher"
-	"github.com/deekue/gumshoe/webui"
+	"github.com/deekue/gumshoe/gumshoe"
 )
 
 // HTTP Server Flags
 var port = flag.String("p", "http",
 	"Which port do we serve requests from. 0 allows the system to decide.")
-var baseDir = flag.String("baseDir",
+var baseDir = flag.String("d",
 	filepath.Join(os.Getenv("HOME"), ".local", "gumshoe"),
 	"Base path for gumshoe.")
 
@@ -27,7 +24,7 @@ var configFile = flag.String("c",
 
 // Get this flag set working!
 var (
-	tc         = config.TrackerConfig{}
+	tc         = gumshoe.TrackerConfig{}
 	home       = os.Getenv("HOME")
 	user       = os.Getenv("USER")
 	gopath     = os.Getenv("GOPATH")
@@ -39,8 +36,8 @@ type gumshoeSignals struct {
 	configModified chan bool
 	shutdown       chan bool
 	// logger          chan Logger
-	tcSignal   chan config.TrackerConfig
-	showSignal chan *config.Shows
+	tcSignal   chan gumshoe.TrackerConfig
+	showSignal chan *gumshoe.Shows
 }
 
 func main() {
@@ -56,7 +53,7 @@ func main() {
 	//signals := new(gumshoeSignals)
 	//signals.tcSignal <- tc
 
-	allShows := config.NewShowsConfig()
+	allShows := gumshoe.NewShowsConfig()
 	if numShows, err := allShows.LoadShows(tc); err == nil {
 		log.Printf("You have %d shows that you are tracking.", numShows)
 	}
@@ -64,10 +61,10 @@ func main() {
 	log.Println("Starting up gumshoe...")
 
 	// go StartMetrics()
-	watcher.InitWatcher(tc, allShows)
+	gumshoe.InitWatcher(tc, allShows)
 	if tc.Operations.WatchMethod == "irc" {
-		go irc.StartIRC(tc)
+		go gumshoe.StartIRC(tc)
 	}
-	webui.StartHTTPServer(*port)
+	gumshoe.StartHTTPServer(*baseDir, *port)
 	log.Println("Exiting gumshoe...")
 }
