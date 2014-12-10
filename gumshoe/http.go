@@ -1,9 +1,10 @@
-package webui
+package gumshoe
 
 import (
 	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
 
 	"github.com/go-martini/martini"
 )
@@ -52,13 +53,19 @@ func deleteQueueItem() string {
 	return "deleteQueueItem"
 }
 
+func getStatus() string {
+	return "OK"
+}
+
 // StartHTTPServer start a HTTP server for configuration and monitoring
-func StartHTTPServer(port string) {
+func StartHTTPServer(baseDir string, port string) {
 	var hostString = fmt.Sprintf(":%s", port)
 	var m = martini.Classic()
 
-	static := martini.Static("www", martini.StaticOptions{Fallback: "/index.html", Exclude: "/api"})
+	static := martini.Static(filepath.Join(baseDir, "www"), martini.StaticOptions{Fallback: "/index.html", Exclude: "/api"})
 	m.NotFound(static, http.NotFound)
+
+	m.Get("/status", getStatus)
 
 	m.Group("/api/show", func(r martini.Router) {
 		r.Get("/:id", getShows)
