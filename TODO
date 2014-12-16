@@ -4,6 +4,7 @@
 	- patterns
 	- shows
 		- layer shows on top of patterns
+  - state tracker
 	- config
 - port episode tracker to Go
 - implement Watcher interface
