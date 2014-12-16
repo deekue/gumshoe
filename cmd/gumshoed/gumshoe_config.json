@@ -26,7 +26,11 @@
         "http_port": "20123",
         "log_level": "debug",
         "use_imdb_watchlist": false,
-        "watch_method": "rss"
+        "watch_methods": {
+					"rss": false,
+					"irc": false,
+					"log": false
+				}
     },
     "tracker": {
         "tracker": "http://www.bitmetv.org",

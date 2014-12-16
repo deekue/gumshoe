@@ -2,7 +2,6 @@ package gumshoe
 
 import (
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"log"
 )
@@ -36,12 +35,12 @@ type RSSChannel struct {
 }
 
 type Operations struct {
-	EnableLogging bool   `json:"enable_logging"`
-	EnableWeb     bool   `json:"enable_web"`
-	HttpPort      string `json:"http_port"`
-	LogLevel      string `json:"log_level"`
-	UseIMDB       bool   `json:"use_imdb_watchlist"`
-	WatchMethod   string `json:"watch_method"`
+	EnableLogging bool            `json:"enable_logging"`
+	EnableWeb     bool            `json:"enable_web"`
+	HttpPort      string          `json:"http_port"`
+	LogLevel      string          `json:"log_level"`
+	UseIMDB       bool            `json:"use_imdb_watchlist"`
+	WatchMethods  map[string]bool `json:"watch_methods"`
 }
 
 type TrackerConfig struct {
@@ -92,70 +91,4 @@ func (tc *TrackerConfig) WriteGumshoeConfig(update []byte) error {
 		return err
 	}
 	return err
-}
-
-// TV shows that should be downloaded.
-
-type Show struct {
-	Title    string   `json:"title"`
-	Quality  []string `json:"quality"`
-	Episodal bool     `json:"episodes"`
-}
-
-type Shows struct {
-	TVShows []Show `json:"tv shows"`
-}
-
-func NewShowsConfig() *Shows {
-	return &Shows{}
-}
-
-//func (S *Shows) AddShow(s Show) {
-//	append(S.TVShows, s)
-//}
-
-func (S *Shows) GetShow(title string) (int, *Show, error) {
-	for x := range S.TVShows {
-		if S.TVShows[x].Title == title {
-			return x, &S.TVShows[x], nil
-		}
-	}
-	return -1, nil, errors.New("Not found")
-}
-
-//func (S *Shows) RemoveShow(title string) error {
-//	var index int
-//	if index, _, err := S.GetShow(title); err != nil {
-//		return err
-//	}
-//	firstSlice := S.TVShows[:index-1]
-//  for x := range S.TVShows[index+1:] {
-//    append(firstSlice, x)
-//  }
-//	S.TVShows = firstSlice
-//	return nil
-//}
-
-func (S *Shows) LoadShows(tc TrackerConfig) (int, error) {
-	sCfg, err := ioutil.ReadFile(tc.Files["shows"])
-	if err != nil {
-		log.Println("No show file found. Will just use a blank one.")
-	}
-	if err := json.Unmarshal(sCfg, &S); err != nil {
-		// TODO(ryan): log error message
-		return -1, err
-	}
-	return len(S.TVShows), nil
-}
-
-func (S *Shows) WriteShows(tc TrackerConfig) (int, error) {
-	sCfg, err := json.MarshalIndent(&S, "", "  ")
-	if err == nil {
-		// TODO(ryan): log success writing things (woo!)
-		if err := ioutil.WriteFile(tc.Files["shows"], sCfg, 0666); err == nil {
-			// TODO(ryan): log more stuff here too.
-			return len(S.TVShows), nil
-		}
-	}
-	return -1, err
 }

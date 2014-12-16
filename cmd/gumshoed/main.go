@@ -22,7 +22,7 @@ var configFile = flag.String("c",
 	filepath.Join(os.Getenv("HOME"), ".gumshoe", "config.json"),
 	"Location of the configuration file.")
 
-// Get this flag set working!
+// TODO Get this flag set working!
 var (
 	tc         = gumshoe.TrackerConfig{}
 	home       = os.Getenv("HOME")
@@ -31,14 +31,6 @@ var (
 	gumshoeSrc = os.Getenv("GUMSHOESRC")
 	gcstat     = debug.GCStats{}
 )
-
-type gumshoeSignals struct {
-	configModified chan bool
-	shutdown       chan bool
-	// logger          chan Logger
-	tcSignal   chan gumshoe.TrackerConfig
-	showSignal chan *gumshoe.Shows
-}
 
 func main() {
 	flag.Parse()
@@ -50,21 +42,28 @@ func main() {
 			log.Println(err)
 		}
 	}
-	//signals := new(gumshoeSignals)
-	//signals.tcSignal <- tc
 
-	allShows := gumshoe.NewShowsConfig()
-	if numShows, err := allShows.LoadShows(tc); err == nil {
-		log.Printf("You have %d shows that you are tracking.", numShows)
-	}
-	//signals.showSignal <- allShows
 	log.Println("Starting up gumshoe...")
+	gumshoe.InitShowDb(*baseDir)
 
-	// go StartMetrics()
-	gumshoe.InitWatcher(tc, allShows)
-	if tc.Operations.WatchMethod == "irc" {
-		go gumshoe.StartIRC(tc)
+	//DEBUG
+	gumshoe.LoadTestData()
+
+	// start enabled watchers
+	for k, v := range tc.Operations.WatchMethods {
+		if v {
+			switch k {
+			case "rss":
+				log.Println("starting RSS watcher")
+			case "irc":
+				log.Println("starting IRC watcher")
+				go gumshoe.StartIRC(tc)
+			case "log":
+				log.Println("starting log file watcher")
+			}
+		}
 	}
+
 	gumshoe.StartHTTPServer(*baseDir, *port)
 	log.Println("Exiting gumshoe...")
 }

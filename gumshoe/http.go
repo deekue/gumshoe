@@ -1,20 +1,39 @@
 package gumshoe
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"path/filepath"
+	"strconv"
 
 	"github.com/go-martini/martini"
 )
 
-func getShows() string {
-	return "getShows"
+func getShows(res http.ResponseWriter) string {
+	data, err := ListShows()
+	if err == nil {
+		return render(res, data)
+	}
+	return render(res, err)
 }
 
-func newShow() string {
-	return "newShow"
+func getShow(res http.ResponseWriter, params martini.Params) string {
+	id, err := strconv.ParseInt(params["id"], 10, 64)
+	log.Println("getShow:params", params)
+	log.Println("getShow:err", err)
+	if err == nil {
+		data, err := GetShow(id)
+		if err == nil {
+			return render(res, data)
+		}
+	}
+	return render(res, err)
+}
+
+func createShow() string {
+	return "createShow"
 }
 
 func updateShow() string {
@@ -29,8 +48,8 @@ func getConfigs() string {
 	return "getConfigs"
 }
 
-func newConfig() string {
-	return "newConfig"
+func createConfig() string {
+	return "createConfig"
 }
 
 func updateConfig() string {
@@ -45,8 +64,8 @@ func getQueueItems() string {
 	return "getQueueItems"
 }
 
-func newQueueItem() string {
-	return "newQueueItem"
+func createQueueItem() string {
+	return "createQueueItem"
 }
 
 func deleteQueueItem() string {
@@ -55,6 +74,20 @@ func deleteQueueItem() string {
 
 func getStatus() string {
 	return "OK"
+}
+
+func render(res http.ResponseWriter, data interface{}) string {
+	thing, err := json.Marshal(data)
+	if err != nil {
+		panic(err)
+	}
+	return asJson(res, thing)
+}
+
+func asJson(res http.ResponseWriter, data []byte) string {
+	res.Header().Set("Content-Type", "application/json")
+	res.Header().Set("Access-Control-Allow-Origin", "*")
+	return string(data[:])
 }
 
 // StartHTTPServer start a HTTP server for configuration and monitoring
@@ -67,23 +100,24 @@ func StartHTTPServer(baseDir string, port string) {
 
 	m.Get("/status", getStatus)
 
+	m.Get("/api/shows", getShows)
 	m.Group("/api/show", func(r martini.Router) {
-		r.Get("/:id", getShows)
-		r.Post("/new", newShow)
+		r.Get("/:id", getShow)
+		r.Post("/new", createShow)
 		r.Put("/update/:id", updateShow)
 		r.Delete("/delete/:id", deleteShow)
 	})
 
 	m.Group("/api/config", func(r martini.Router) {
 		r.Get("/:id", getConfigs)
-		r.Post("/new", newConfig)
+		r.Post("/new", createConfig)
 		r.Put("/update/:id", updateConfig)
 		r.Delete("/delete/:id", deleteConfig)
 	})
 
 	m.Group("/api/queue", func(r martini.Router) {
 		r.Get("/:id", getQueueItems)
-		r.Post("/new", newQueueItem)
+		r.Post("/new", createQueueItem)
 		r.Delete("/delete/:id", deleteQueueItem)
 	})
 
