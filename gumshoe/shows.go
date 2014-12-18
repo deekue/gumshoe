@@ -18,10 +18,10 @@ import (
 var showDB *gorp.DbMap
 
 type Show struct {
-	ID       int64
-	Title    string
-	Quality  string
-	Episodal bool
+	ID       int64  `json:"ID"`
+	Title    string `json:"title" binding:"required"`
+	Quality  string `json:"quality"`
+	Episodal bool   `json:"episodal"`
 }
 
 type Shows struct {
@@ -29,12 +29,12 @@ type Shows struct {
 }
 
 type Episode struct {
-	ID      int64
-	Title   string
-	Season  int
-	Episode int
-	AirDate string
-	Added   time.Time
+	ID      int64     `json:"ID"`
+	Title   string    `json:"title" binding:"required"`
+	Season  int       `json:"season"`
+	Episode int       `json:"episode"`
+	AirDate string    `json:"airdate"`
+	Added   time.Time `json:"added"`
 }
 
 func newShow(t string, q string, e bool) *Show {
@@ -64,7 +64,8 @@ func newDaily(t, d string) *Episode {
 
 func InitShowDb(baseDir string) {
 	showDB = initDb(baseDir, "shows")
-	//TODO(deekue) is this needed? // defer showDB.Db.Close()
+	//TODO(deekue) is this needed?
+	// defer showDB.Db.Close()
 	initTable(showDB, Show{}, "shows")
 	initTable(showDB, Episode{}, "episodes")
 }
@@ -77,7 +78,7 @@ func LoadTestData() {
 	err = AddShow("game of chowns", quality, true)
 	log.Println("InitShowDb:AddShow:err", err)
 
-	err = AddShow("daily show", quality, false)
+	err = AddShow("daily shown", quality, false)
 	log.Println("InitShowDb:AddShow:err", err)
 }
 
@@ -89,22 +90,18 @@ func AddEpisode(episode *Episode) error {
 func ListShows() (Shows, error) {
 	var shows Shows
 	_, err := showDB.Select(&shows.Shows, "select * from shows order by Title")
-	log.Println("ListShows", shows, " err:", err)
 	return shows, err
 }
 
 func GetShow(id int64) (Show, error) {
 	show := Show{ID: id}
-	log.Println("GetShow:empty struct", show)
 	err := showDB.SelectOne(&show, "select * from shows where ID=?", show.ID)
-	log.Println("GetShow:post select", show)
 	return show, err
 }
 
 func GetShowByTitle(title string) (Show, error) {
 	show := Show{Title: title}
 	err := showDB.SelectOne(&show, "select * from shows where Title=?", show.Title)
-	log.Println("GetShowByTitle", show)
 	return show, err
 }
 
@@ -114,19 +111,13 @@ func AddShow(t string, q string, e bool) error {
 	return err
 }
 
-func DeleteShow(title string) error {
-	_, err := showDB.Exec("delete from shows where Title=?", title)
+func DeleteShow(show Show) error {
+	_, err := showDB.Exec("delete from shows where ID=?", show.ID)
 	return err
 }
 
-func UpdateShow(t string, q string, e bool) error {
-	show := Show{}
-	err := showDB.SelectOne(&show, "select * from shows where Title=?", t)
-	if err == nil {
-		show.Quality = q
-		show.Episodal = e
-		_, err = showDB.Update(show)
-	}
+func UpdateShow(show Show) error {
+	_, err := showDB.Update(show)
 	return err
 }
 

@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/go-martini/martini"
+	"github.com/martini-contrib/binding"
 )
 
 func getShows(res http.ResponseWriter) string {
@@ -21,8 +22,6 @@ func getShows(res http.ResponseWriter) string {
 
 func getShow(res http.ResponseWriter, params martini.Params) string {
 	id, err := strconv.ParseInt(params["id"], 10, 64)
-	log.Println("getShow:params", params)
-	log.Println("getShow:err", err)
 	if err == nil {
 		data, err := GetShow(id)
 		if err == nil {
@@ -32,16 +31,28 @@ func getShow(res http.ResponseWriter, params martini.Params) string {
 	return render(res, err)
 }
 
-func createShow() string {
-	return "createShow"
+func createShow(res http.ResponseWriter, params martini.Params, show Show) string {
+	err := AddShow(show.title, show.quality, show.episodal)
+	return render(res, err)
 }
 
-func updateShow() string {
-	return "updateShow"
+func updateShow(res http.ResponseWriter, params martini.Params, show Show) string {
+	id, err := strconv.ParseInt(params["id"], 10, 64)
+	if err == nil {
+		show := newShow(show.title, show.quality, show.episodal)
+		show.ID = id
+		err = UpdateShow(show)
+	}
+	return render(res, err)
 }
 
-func deleteShow() string {
-	return "deleteShow"
+func deleteShow(res http.ResponseWriter, params martini.Params) string {
+	id, err := strconv.ParseInt(params["id"], 10, 64)
+	if err == nil {
+		show := Show{ID: id}
+		err = DeleteShow(show)
+	}
+	return render(res, err)
 }
 
 func getConfigs() string {
@@ -103,8 +114,8 @@ func StartHTTPServer(baseDir string, port string) {
 	m.Get("/api/shows", getShows)
 	m.Group("/api/show", func(r martini.Router) {
 		r.Get("/:id", getShow)
-		r.Post("/new", createShow)
-		r.Put("/update/:id", updateShow)
+		r.Post("/new", binding.Bind(Show{}), createShow)
+		r.Put("/update/:id", binding.Bind(Show{}), updateShow)
 		r.Delete("/delete/:id", deleteShow)
 	})
 
