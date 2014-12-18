@@ -72,7 +72,11 @@ func InitShowDb(baseDir string) {
 
 func LoadTestData() {
 	var quality string
-	err := AddShow("walking bread", quality, true)
+	// delete any existing rows
+	err := showDB.TruncateTables()
+	checkErr(err, "TruncateTables failed")
+
+	err = AddShow("walking bread", quality, true)
 	log.Println("InitShowDb:AddShow:err", err)
 
 	err = AddShow("game of chowns", quality, true)

@@ -32,16 +32,16 @@ func getShow(res http.ResponseWriter, params martini.Params) string {
 }
 
 func createShow(res http.ResponseWriter, params martini.Params, show Show) string {
-	err := AddShow(show.title, show.quality, show.episodal)
+	err := AddShow(show.Title, show.Quality, show.Episodal)
 	return render(res, err)
 }
 
 func updateShow(res http.ResponseWriter, params martini.Params, show Show) string {
 	id, err := strconv.ParseInt(params["id"], 10, 64)
 	if err == nil {
-		show := newShow(show.title, show.quality, show.episodal)
+		show := newShow(show.Title, show.Quality, show.Episodal)
 		show.ID = id
-		err = UpdateShow(show)
+		err = UpdateShow(*show)
 	}
 	return render(res, err)
 }
