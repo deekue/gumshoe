@@ -8,6 +8,13 @@
     $http.get("/api/shows").success(function(data){
       showCtrl.shows = data.Shows;
     });
+
+    this.deleteShow = function(index) {
+      $http.delete("/api/show/delete/" + showCtrl.shows[index].ID).success(function(data){
+        showCtrl.shows.splice(index, 1);
+      });
+    };
+
   } ] );
 
   app.directive("gumshoeTabs", function() {
