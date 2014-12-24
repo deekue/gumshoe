@@ -11,20 +11,47 @@
       showCtrl.shows = data.Shows;
     });
 
+    this.boolConv = function(str) {
+      switch(str) {
+        case "true":
+          return true;
+        case "false":
+          return false;
+      }
+    };
+
     this.addShow = function() {
       $log.log("addShow");
-      switch(this.newShow.episodal) {
-        case "true":
-          this.newShow.episodal = true;
-          break;
-        case "false":
-          this.newShow.episodal = false;
-          break;
-      }
+      this.newShow.episodal = this.boolConv(this.newShow.episodal);
       $http.post("/api/show/new", this.newShow).success(function(data){
         showCtrl.shows.push(showCtrl.newShow);
         showCtrl.newShow = {};
         showCtrl.showAddForm = false;
+      }).error(function(data, status, headers, config){
+        $log.log(data, status, headers, config);
+      });
+    };
+
+    this.showEditForm = function(index) {
+      if(typeof showCtrl.shows[index].showEditForm == "undefined") {
+        showCtrl.shows[index].showEditForm = true;
+      } else {
+        showCtrl.shows[index].showEditForm = !showCtrl.shows[index].showEditForm;
+      }
+    };
+
+    this.isEditFormVisible = function(index) {
+      if(typeof showCtrl.shows[index].showEditForm == "undefined") {
+        showCtrl.shows[index].showEditForm = false;
+      }
+      return showCtrl.shows[index].showEditForm;
+    };
+
+    this.editShow = function(index) {
+      newShow = this.shows[index];
+      newShow.episodal = this.boolConv(newShow.episodal);
+      $http.post("/api/show/update/" + newShow.ID, newShow).success(function(){
+        showCtrl.showEditForm(index);
       }).error(function(data, status, headers, config){
         $log.log(data, status, headers, config);
       });

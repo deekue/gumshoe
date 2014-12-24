@@ -39,9 +39,9 @@ func createShow(res http.ResponseWriter, params martini.Params, show Show) strin
 func updateShow(res http.ResponseWriter, params martini.Params, show Show) string {
 	id, err := strconv.ParseInt(params["id"], 10, 64)
 	if err == nil {
-		show := newShow(show.Title, show.Quality, show.Episodal)
-		show.ID = id
-		err = UpdateShow(*show)
+		temp := newShow(show.Title, show.Quality, show.Episodal)
+		temp.ID = id
+		err = UpdateShow(*temp)
 	}
 	return render(res, err)
 }
@@ -115,7 +115,7 @@ func StartHTTPServer(baseDir string, port string) {
 	m.Group("/api/show", func(r martini.Router) {
 		r.Get("/:id", getShow)
 		r.Post("/new", binding.Bind(Show{}), createShow)
-		r.Put("/update/:id", binding.Bind(Show{}), updateShow)
+		r.Post("/update/:id", binding.Bind(Show{}), updateShow)
 		r.Delete("/delete/:id", deleteShow)
 	})
 

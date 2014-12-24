@@ -121,7 +121,7 @@ func DeleteShow(show Show) error {
 }
 
 func UpdateShow(show Show) error {
-	_, err := showDB.Update(show)
+	_, err := showDB.Update(&show)
 	return err
 }
 
