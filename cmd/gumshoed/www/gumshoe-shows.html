@@ -1,4 +1,21 @@
 <div ng-show="tab.isSet(2)" ng-controller="ShowController as showCtrl">
+  <button ng-click="showCtrl.showAddForm = !showCtrl.showAddForm" type="button" class="btn" aria-label="Add Show">Add Show</button>
+  <div ng-show="showCtrl.showAddForm">
+    <form name="newShow" ng-submit="showCtrl.addShow()" novalidate>
+      <label for="title">Title</label>
+      <input ng-model="showCtrl.newShow.title" class="form-control" type="text" name="title" required>
+      <label for="quality">Quality</label>
+      <input ng-model="showCtrl.newShow.quality" class="form-control" type="text" name="quality">
+      <label for="episodal">Episodal</label>
+      <select ng-model="showCtrl.newShow.episodal" class="form-control" name="episodal">
+        <option value="true">True</option>
+        <option value="false">False</option>
+      </select>
+      <button type="submit" class="btn btn-default">
+        <span class="glyphicon glyphicon-ok" title="Add" aria-hidden="true"></span>
+      </button>
+    </form>
+  </div>
   <div class="table-responsive">
 		<table class="table table-striped">
 			<thead>

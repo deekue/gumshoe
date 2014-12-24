@@ -18,7 +18,7 @@ import (
 var showDB *gorp.DbMap
 
 type Show struct {
-	ID       int64  `json:"ID"`
+	ID       int64  `json:"ID,omitempty"`
 	Title    string `json:"title" binding:"required"`
 	Quality  string `json:"quality"`
 	Episodal bool   `json:"episodal"`

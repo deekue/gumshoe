@@ -4,10 +4,31 @@
   app.controller('ShowController', ['$log', '$http', function($log, $http){
     var showCtrl = this;
     showCtrl.shows = [];
+    showCtrl.newShow = {};
+    var showAddForm = false;
 
     $http.get("/api/shows").success(function(data){
       showCtrl.shows = data.Shows;
     });
+
+    this.addShow = function() {
+      $log.log("addShow");
+      switch(this.newShow.episodal) {
+        case "true":
+          this.newShow.episodal = true;
+          break;
+        case "false":
+          this.newShow.episodal = false;
+          break;
+      }
+      $http.post("/api/show/new", this.newShow).success(function(data){
+        showCtrl.shows.push(showCtrl.newShow);
+        showCtrl.newShow = {};
+        showCtrl.showAddForm = false;
+      }).error(function(data, status, headers, config){
+        $log.log(data, status, headers, config);
+      });
+    };
 
     this.deleteShow = function(index) {
       $http.delete("/api/show/delete/" + showCtrl.shows[index].ID).success(function(data){
