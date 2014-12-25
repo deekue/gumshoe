@@ -58,9 +58,12 @@
     };
 
     this.deleteShow = function(index) {
-      $http.delete("/api/show/delete/" + showCtrl.shows[index].ID).success(function(data){
-        showCtrl.shows.splice(index, 1);
-      });
+      title = showCtrl.shows[index].title;
+      if(window.confirm("Delete " + title + "?")) {
+        $http.delete("/api/show/delete/" + showCtrl.shows[index].ID).success(function(data){
+          showCtrl.shows.splice(index, 1);
+        });
+      };
     };
 
   } ] );
